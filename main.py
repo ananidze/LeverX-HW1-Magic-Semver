@@ -33,7 +33,7 @@ class Version:
 
     def __eq__(self, other):
         if not isinstance(other, Version):
-            return NotImplemented
+            raise NotImplementedError("Comparison not supported between instances of 'Version' and other types")
 
         return (
             self.major == other.major
@@ -44,7 +44,7 @@ class Version:
 
     def __lt__(self, other):
         if not isinstance(other, Version):
-            return NotImplemented
+            raise NotImplementedError("Comparison not supported between instances of 'Version' and other types")
 
         core_self = (self.major, self.minor, self.patch)
         core_other = (other.major, other.minor, other.patch)
