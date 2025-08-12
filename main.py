@@ -14,26 +14,40 @@ class Version:
     )
 
     def __init__(self, version):
-        normalized_version = re.sub(r"(\d)([a-zA-Z])", r"\1-\2", str(version))
+        major, minor, patch, prerelease = self._parse(version)
+        self.major = major
+        self.minor = minor
+        self.patch = patch
+        self.prerelease = prerelease
 
+    def _parse(self, version):
+        normalized_version = self._normalize(version)
         match = self._semver_regex.match(normalized_version)
         if not match:
             raise ValueError(f"Invalid version string: '{version}'")
 
-        self.major = int(match.group("major"))
-        self.minor = int(match.group("minor"))
-        self.patch = int(match.group("patch"))
+        major = int(match.group("major"))
+        minor = int(match.group("minor"))
+        patch = int(match.group("patch"))
+        prerelease = self._parse_prerelease(match.group("prerelease"))
 
-        if prerelease := match.group("prerelease"):
-            self.prerelease = tuple(
-                int(i) if i.isdigit() else i for i in prerelease.split(".")
-            )
-        else:
-            self.prerelease = ()
+        return major, minor, patch, prerelease
+
+    @classmethod
+    def _normalize(cls, version):
+        return re.sub(r"(\d)([a-zA-Z])", r"\1-\2", str(version))
+
+    @classmethod
+    def _parse_prerelease(cls, prerelease_str):
+        if not prerelease_str:
+            return ()
+        return tuple(int(i) if i.isdigit() else i for i in prerelease_str.split("."))
 
     def __eq__(self, other):
         if not isinstance(other, Version):
-            raise NotImplementedError("Comparison not supported between instances of 'Version' and other types")
+            raise NotImplementedError(
+                "Comparison not supported between instances of 'Version' and other types"
+            )
 
         return (
             self.major == other.major
@@ -44,7 +58,9 @@ class Version:
 
     def __lt__(self, other):
         if not isinstance(other, Version):
-            raise NotImplementedError("Comparison not supported between instances of 'Version' and other types")
+            raise NotImplementedError(
+                "Comparison not supported between instances of 'Version' and other types"
+            )
 
         core_self = (self.major, self.minor, self.patch)
         core_other = (other.major, other.minor, other.patch)
